@@ -81,6 +81,9 @@ class AppContainer(context: Context) {
     val extensionManager: ExtensionManager =
         ExtensionManager(appContext, gson, okHttpClient, sourceRegistry)
 
+    val installedExtensionScanner: InstalledExtensionScanner =
+        InstalledExtensionScanner(appContext)
+
     val geminiTranslator: GeminiTranslator = GeminiTranslator(okHttpClient, gson)
 
     val googleTranslator: GoogleTranslator = GoogleTranslator(okHttpClient)
@@ -99,8 +102,16 @@ class AppContainer(context: Context) {
     val pageBitmapLoader: PageBitmapLoader = PageBitmapLoader(okHttpClient)
 
     init {
-        // Nạp lại các extension đã cài (đọc APK từ bộ nhớ riêng rồi đẩy nguồn vào registry).
-        applicationScope.launch { extensionManager.restore() }
+        // Quét các extension đã cài trên máy (APK plugin) và nạp nguồn truyện của chúng.
+        applicationScope.launch { rescanExtensions() }
+    }
+
+    /** Quét lại các extension đã cài (gọi khi khởi động hoặc khi có app mới được cài). */
+    fun rescanExtensions() {
+        applicationScope.launch {
+            val sources = installedExtensionScanner.scan()
+            sourceRegistry.setAll(sources)
+        }
     }
 
     private companion object {
