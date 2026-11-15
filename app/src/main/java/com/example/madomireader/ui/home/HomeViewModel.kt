@@ -35,6 +35,7 @@ data class HomeUiState(
     val genre: String? = null,
     val sources: List<SourceOption> = emptyList(),
     val sourceNames: Map<String, String> = emptyMap(),
+    val sourcesReady: Boolean = false,
     val genres: List<String> = emptyList(),
     val mangas: List<Manga> = emptyList(),
     val history: List<HistoryEntry> = emptyList(),
@@ -62,23 +63,50 @@ class HomeViewModel(
     private var currentPage = 0
 
     init {
-        val sources = container.mangaRepository.sources().map { SourceOption(it.id, it.name) }
-        _state.update { current ->
-            current.copy(
-                sources = sources,
-                sourceNames = sources.associate { it.id to it.name },
-                genres = container.mangaRepository.genres(),
-            )
+        // Danh sách nguồn thay đổi lúc chạy (cài/gỡ extension), nên UI quan sát nó.
+        viewModelScope.launch {
+            container.sourceRegistry.sources.collect { sources ->
+                val options = sources.map { SourceOption(it.id, it.name) }
+                val selected = sourceFlow.value
+                val keepSelection = selected != null && options.any { it.id == selected }
+
+                _state.update { current ->
+                    current.copy(
+                        sources = options,
+                        sourceNames = options.associate { it.id to it.name },
+                        sourceId = if (keepSelection) selected else null,
+                        genres = container.mangaRepository.genres(),
+                    )
+                }
+
+                if (selected != null && !keepSelection) sourceFlow.value = null
+            }
         }
 
+        viewModelScope.launch {
+            container.sourceRegistry.initialized.collect { ready ->
+                _state.update { it.copy(sourcesReady = ready) }
+            }
+        }
+
+        // Bất kỳ thay đổi nào (từ khoá, nguồn, thể loại, danh sách nguồn) đều tải lại trang đầu.
         viewModelScope.launch {
             combine(
                 queryFlow.debounce(300L).distinctUntilChanged(),
                 sourceFlow,
                 genreFlow,
-            ) { query, sourceId, genre -> Triple(query, sourceId, genre) }
-                .collectLatest { (query, sourceId, genre) ->
-                    loadFirstPage(query, sourceId, genre)
+                container.sourceRegistry.sources,
+            ) { query, sourceId, genre, sources ->
+                BrowseKey(
+                    query = query,
+                    sourceId = sourceId,
+                    genre = genre,
+                    sourceIds = sources.map { it.id },
+                )
+            }
+                .distinctUntilChanged()
+                .collectLatest { key ->
+                    loadFirstPage(key.query, key.sourceId, key.genre)
                 }
         }
 
@@ -193,15 +221,19 @@ class HomeViewModel(
             listOf(sourceId)
         }
 
+        if (targetIds.isEmpty()) {
+            return FetchResult(mangas = emptyList(), hasMore = false, errorMessage = null)
+        }
+
         val collected = mutableListOf<Manga>()
         var hasMore = false
         var error: String? = null
 
         for (id in targetIds) {
             container.mangaRepository.browse(sourceId = id, page = page, query = query, genre = genre)
-                .onSuccess { mangas ->
-                    collected += mangas
-                    if (mangas.isNotEmpty()) hasMore = true
+                .onSuccess { result ->
+                    collected += result.mangas
+                    if (result.hasNextPage) hasMore = true
                 }
                 .onFailure { throwable ->
                     error = throwable.message ?: "Không tải được dữ liệu"
@@ -214,6 +246,14 @@ class HomeViewModel(
             errorMessage = if (collected.isEmpty()) error else null,
         )
     }
+
+    /** Khoá gộp mọi thứ ảnh hưởng tới danh sách truyện đang hiển thị. */
+    private data class BrowseKey(
+        val query: String,
+        val sourceId: String?,
+        val genre: String?,
+        val sourceIds: List<String>,
+    )
 
     private data class FetchResult(
         val mangas: List<Manga>,

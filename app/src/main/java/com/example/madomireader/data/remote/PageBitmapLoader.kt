@@ -13,9 +13,8 @@ import java.io.IOException
 /**
  * Lấy bitmap của một trang truyện để đưa vào OCR.
  *
- * - Trang của nguồn offline được vẽ tại chỗ.
- * - Trang của nguồn online được tải bằng OkHttp (dùng chung cache HTTP với client),
- *   giải mã có tiết chế bộ nhớ và giữ trong LruCache để lần dịch sau không phải tải lại.
+ * Trang được tải bằng OkHttp (dùng chung cache HTTP với client), giải mã có tiết chế
+ * bộ nhớ và giữ trong LruCache để lần dịch sau không phải tải lại.
  */
 class PageBitmapLoader(
     private val client: OkHttpClient,
@@ -30,11 +29,7 @@ class PageBitmapLoader(
             val key = cacheKey(page)
             cache.get(key)?.takeIf { !it.isRecycled }?.let { return@withContext it }
 
-            val bitmap = if (page.isLocal) {
-                PlaceholderPageRenderer.render(page)
-            } else {
-                download(page, maxDimension)
-            }
+            val bitmap = download(page, maxDimension)
 
             cache.put(key, bitmap)
             bitmap
@@ -68,10 +63,7 @@ class PageBitmapLoader(
         }
     }
 
-    private fun cacheKey(page: Page): String = when {
-        page.isLocal -> "local:${page.index}:${page.placeholderLines.hashCode()}"
-        else -> page.imageUrl
-    }
+    private fun cacheKey(page: Page): String = page.imageUrl
 
     companion object {
         private const val MAX_CACHED_PAGES = 10

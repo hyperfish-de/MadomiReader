@@ -5,18 +5,34 @@ import com.example.madomireader.domain.model.Manga
 import com.example.madomireader.domain.model.MangaDetails
 import com.example.madomireader.domain.model.Page
 import com.example.madomireader.domain.model.SourceLanguage
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * Kết quả của một lần duyệt/tìm truyện.
+ *
+ * [hasNextPage] cho biết còn trang nữa hay không — nhờ vậy nguồn không phải đoán
+ * "còn dữ liệu" chỉ vì trang vừa rồi trả về danh sách không rỗng.
+ */
+data class BrowseResult(
+    val mangas: List<Manga>,
+    val hasNextPage: Boolean,
+)
 
 /**
  * Hợp đồng cho một "nguồn truyện" (MangaSource).
  *
- * Muốn thêm nguồn mới (MangaDex, TruyenQQ, NetTruyen…):
- *  1. Tạo một class implement interface này.
- *  2. Đăng ký nó trong `SourceRegistry`.
- * Không phải sửa gì ở tầng UI hay ViewModel.
+ * Có hai loại nguồn:
+ *  - Nguồn viết sẵn trong ứng dụng (một class implement interface này).
+ *  - Nguồn nạp từ APK extension của Keiyoushi/Tachiyomi
+ *    (xem [com.example.madomireader.data.source.extension.ExtensionMangaSource]).
+ *
+ * Không phải sửa gì ở tầng UI hay ViewModel khi thêm nguồn mới.
  */
 interface MangaSource {
 
-    /** Định danh duy nhất, ví dụ "mangadex", "truyenqq". */
+    /** Định danh duy nhất, ví dụ "mangadex" hoặc "ext-1234567890". */
     val id: String
 
     /** Tên hiển thị cho người dùng. */
@@ -38,7 +54,7 @@ interface MangaSource {
      * @param query từ khoá tìm kiếm, null hoặc rỗng nghĩa là duyệt tất cả.
      * @param genre thể loại cần lọc, null nghĩa là tất cả.
      */
-    suspend fun browse(page: Int, query: String?, genre: String?): List<Manga>
+    suspend fun browse(page: Int, query: String?, genre: String?): BrowseResult
 
     /** Thông tin chi tiết một bộ truyện. */
     suspend fun details(mangaId: String): MangaDetails
@@ -51,20 +67,40 @@ interface MangaSource {
 }
 
 /**
- * Nơi giữ tất cả nguồn truyện đã đăng ký.
+ * Nơi giữ tất cả nguồn truyện đang dùng được.
+ *
+ * Danh sách này thay đổi lúc chạy: khi người dùng cài/gỡ một extension, ứng dụng
+ * gọi [setAll] để cập nhật. UI quan sát [sources] để tự vẽ lại.
  */
-class SourceRegistry(sources: List<MangaSource>) {
+class SourceRegistry {
 
-    val all: List<MangaSource> = sources
+    private val _sources = MutableStateFlow<List<MangaSource>>(emptyList())
 
-    private val byId: Map<String, MangaSource> = sources.associateBy { it.id }
+    /** Dòng nguồn truyện hiện tại, để UI thu thập. */
+    val sources: StateFlow<List<MangaSource>> = _sources.asStateFlow()
 
-    val default: MangaSource = sources.first()
+    private val _initialized = MutableStateFlow(false)
 
-    fun find(id: String?): MangaSource? = byId[id]
+    /**
+     * Đã nạp xong các extension đã cài hay chưa.
+     *
+     * Lúc mới mở ứng dụng, [sources] rỗng trong giây lát (đang đọc APK extension), nên UI
+     * cần phân biệt "chưa nạp xong" với "thật sự chưa có nguồn nào".
+     */
+    val initialized: StateFlow<Boolean> = _initialized.asStateFlow()
+
+    val all: List<MangaSource> get() = _sources.value
+
+    fun setAll(sources: List<MangaSource>) {
+        _sources.value = sources
+        _initialized.value = true
+    }
+
+    fun find(id: String?): MangaSource? =
+        if (id == null) null else all.firstOrNull { it.id == id }
 
     fun require(id: String): MangaSource =
-        byId[id] ?: throw IllegalArgumentException("Nguồn truyện không tồn tại: $id")
+        find(id) ?: throw IllegalArgumentException("Nguồn truyện không tồn tại: $id")
 
     fun genres(): List<String> = all.flatMap { it.genres() }.distinct().sorted()
 }

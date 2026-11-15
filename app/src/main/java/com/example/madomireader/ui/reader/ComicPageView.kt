@@ -1,12 +1,9 @@
 package com.example.madomireader.ui.reader
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -20,31 +17,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.example.madomireader.data.remote.PlaceholderPageRenderer
 import com.example.madomireader.domain.model.Page
 import com.example.madomireader.domain.model.PageTranslation
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Một trang truyện hoàn chỉnh: ảnh gốc + (tuỳ chọn) lớp dịch phủ lên trên.
  *
- * - Trang của nguồn demo offline được vẽ tại chỗ bằng [PlaceholderPageRenderer].
- * - Trang của nguồn online tải bằng Coil, có trạng thái đang tải / lỗi + nút thử lại.
+ * Ảnh được tải bằng Coil (cache bộ nhớ + đĩa), có trạng thái đang tải / lỗi + nút thử lại.
+ * Header riêng của nguồn (Referer, Cookie…) được gửi kèm qua [Page.headers].
  */
 @Composable
 fun ComicPageView(
@@ -55,17 +45,10 @@ fun ComicPageView(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        if (page.isLocal) {
-            LocalPageImage(
-                page = page,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            RemotePageImage(
-                page = page,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        RemotePageImage(
+            page = page,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
         if (showTranslationLayer &&
             translation != null &&
@@ -76,50 +59,6 @@ fun ComicPageView(
                 translation = translation,
                 fontSizeScale = fontSizeScale,
                 modifier = Modifier.matchParentSize(),
-            )
-        }
-    }
-}
-
-/** Trang vẽ cục bộ (nguồn demo offline) — không cần mạng. */
-@Composable
-private fun LocalPageImage(
-    page: Page,
-    modifier: Modifier = Modifier,
-) {
-    val bitmapState = produceState<ImageBitmap?>(initialValue = null, page) {
-        value = withContext(Dispatchers.Default) {
-            runCatching { PlaceholderPageRenderer.render(page).asImageBitmap() }.getOrNull()
-        }
-    }
-
-    val ratio = remember(page) {
-        if (page.width > 0 && page.height > 0) {
-            page.width.toFloat() / page.height.toFloat()
-        } else {
-            2f / 3f
-        }
-    }
-
-    val bitmap = bitmapState.value
-
-    Box(
-        modifier = modifier
-            .aspectRatio(ratio)
-            .background(Color(0xFFE9E6EF)),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (bitmap != null) {
-            Image(
-                bitmap = bitmap,
-                contentDescription = "Trang ${page.index + 1}",
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            CircularProgressIndicator(
-                modifier = Modifier.size(28.dp),
-                strokeWidth = 2.dp,
             )
         }
     }

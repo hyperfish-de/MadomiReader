@@ -1,5 +1,6 @@
 package com.example.madomireader.data.repository
 
+import com.example.madomireader.data.source.BrowseResult
 import com.example.madomireader.data.source.MangaSource
 import com.example.madomireader.data.source.SourceRegistry
 import com.example.madomireader.domain.model.Chapter
@@ -34,7 +35,7 @@ class MangaRepository(
         page: Int,
         query: String? = null,
         genre: String? = null,
-    ): Result<List<Manga>> = runCatchingSource {
+    ): Result<BrowseResult> = runCatchingSource {
         registry.require(sourceId).browse(page = page, query = query, genre = genre)
     }
 

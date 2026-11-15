@@ -7,11 +7,26 @@ activityCompose = "1.9.3"
 composeBom = "2024.10.01"
 navigationCompose = "2.8.4"
 coil = "2.7.0"
+# okhttp: bản biên dịch (compileClasspath) — Kotlin 2.0.21 đọc được.
 okhttp = "4.12.0"
+# okhttp/okio/... bản chạy thật (runtimeClasspath) — các extension Keiyoushi 1.6
+# được biên dịch dựa trên okhttp 5.x (CompressionInterceptor, Gzip, brotli, zstd).
+okhttpRuntime = "5.4.0"
+okioRuntime = "3.17.0"
 gson = "2.11.0"
 datastore = "1.1.1"
 coroutines = "1.9.0"
 mlkitText = "16.0.1"
+mlkitTranslate = "17.0.3"
+mlkitLanguageId = "17.0.6"
+jsoupRuntime = "1.22.2"
+# kotlinx.serialization: bản biên dịch (JsonObject/Json/ProtoBuf) và bản chạy thật.
+serializationJson = "1.7.3"
+serializationRuntime = "1.11.0"
+zstdKmpOkio = "0.4.0"
+jspecify = "1.0.1"
+injekt = "4135455a2a"
+androidxPreference = "1.2.1"
 junit = "4.13.2"
 androidxJunit = "1.2.1"
 espresso = "3.6.1"
@@ -37,7 +52,13 @@ androidx-material-icons-core = { group = "androidx.compose.material", name = "ma
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-runtime = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttpRuntime" }
+okhttp-brotli = { group = "com.squareup.okhttp3", name = "okhttp-brotli", version.ref = "okhttpRuntime" }
+okhttp-zstd = { group = "com.squareup.okhttp3", name = "okhttp-zstd", version.ref = "okhttpRuntime" }
+okio-runtime = { group = "com.squareup.okio", name = "okio", version.ref = "okioRuntime" }
+
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
@@ -46,6 +67,22 @@ mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition"
 mlkit-text-recognition-chinese = { group = "com.google.mlkit", name = "text-recognition-chinese", version.ref = "mlkitText" }
 mlkit-text-recognition-japanese = { group = "com.google.mlkit", name = "text-recognition-japanese", version.ref = "mlkitText" }
 mlkit-text-recognition-korean = { group = "com.google.mlkit", name = "text-recognition-korean", version.ref = "mlkitText" }
+
+mlkit-translate = { group = "com.google.mlkit", name = "translate", version.ref = "mlkitTranslate" }
+mlkit-language-id = { group = "com.google.mlkit", name = "language-id", version.ref = "mlkitLanguageId" }
+
+# --- Thư viện mà extension Keiyoushi cần thấy trên classpath lúc chạy ---
+jsoup-runtime = { group = "org.jsoup", name = "jsoup", version.ref = "jsoupRuntime" }
+jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serializationJson" }
+kotlinx-serialization-protobuf = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-protobuf", version.ref = "serializationJson" }
+kotlinx-serialization-json-runtime = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serializationRuntime" }
+kotlinx-serialization-protobuf-runtime = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-protobuf", version.ref = "serializationRuntime" }
+kotlinx-serialization-json-okio = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json-okio", version.ref = "serializationRuntime" }
+zstd-kmp-okio = { group = "com.squareup.zstd", name = "zstd-kmp-okio", version.ref = "zstdKmpOkio" }
+injekt-core = { group = "com.github.null2264.injekt", name = "injekt-core", version.ref = "injekt" }
+
+androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "androidxPreference" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }

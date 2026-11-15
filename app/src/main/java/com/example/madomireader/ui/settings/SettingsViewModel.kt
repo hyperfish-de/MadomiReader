@@ -12,11 +12,19 @@ import com.example.madomireader.domain.model.GeminiModel
 import com.example.madomireader.domain.model.OverlayStyle
 import com.example.madomireader.domain.model.ReaderMode
 import com.example.madomireader.domain.model.SourceLanguage
+import com.example.madomireader.domain.model.TranslationEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** Một nguồn truyện đang dùng, chỉ để hiển thị trong Cài đặt. */
+data class SettingsSource(
+    val id: String,
+    val name: String,
+    val description: String,
+)
 
 data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
@@ -27,6 +35,7 @@ data class SettingsUiState(
     val testResult: String? = null,
     val message: String? = null,
     val isLoaded: Boolean = false,
+    val sources: List<SettingsSource> = emptyList(),
 )
 
 /**
@@ -50,6 +59,22 @@ class SettingsViewModel(
                         // ghi đè khi người dùng đang sửa.
                         apiKeyInput = if (current.isLoaded) current.apiKeyInput else settings.apiKey,
                         isLoaded = true,
+                    )
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            container.sourceRegistry.sources.collect { sources ->
+                _state.update { current ->
+                    current.copy(
+                        sources = sources.map { source ->
+                            SettingsSource(
+                                id = source.id,
+                                name = source.name,
+                                description = source.description,
+                            )
+                        },
                     )
                 }
             }
@@ -126,6 +151,10 @@ class SettingsViewModel(
 
     fun setModel(model: GeminiModel) = updateSettings { repository ->
         repository.setModel(model)
+    }
+
+    fun setTranslationEngine(engine: TranslationEngine) = updateSettings { repository ->
+        repository.setTranslationEngine(engine)
     }
 
     fun setSourceLanguage(language: SourceLanguage) = updateSettings { repository ->

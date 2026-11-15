@@ -96,8 +96,39 @@ dependencies {
     implementation(libs.coil.compose)
 
     // --- Networking + JSON (Gemini REST) ---
+    // okhttp 4.12.0 chỉ dùng để BIÊN DỊCH (Kotlin 2.0.21 đọc được); lúc chạy
+    // okhttp 5.4.0 thay thế (xem khối runtimeOnly bên dưới).
     implementation(libs.okhttp)
     implementation(libs.gson)
+
+    // --- Tiện ích mở rộng (Keiyoushi / Tachiyomi extensions) ---
+    // Bộ API host `eu.kanade.tachiyomi.*` nằm ngay trong module này.
+    // kotlinx.serialization: SManga.memo/SChapter.memo là JsonObject, và host phải
+    // đăng ký `Json` + `ProtoBuf` cho injekt (extension lấy qua Injekt.get()).
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.protobuf)
+    // androidx.preference: ConfigurableSource.setupPreferenceScreen(PreferenceScreen).
+    implementation(libs.androidx.preference.ktx)
+    // injekt: extension gọi Injekt.get() để lấy Application/Json/ProtoBuf.
+    implementation(libs.injekt.core)
+
+    // --- Thư viện CHỈ có lúc chạy: các extension Keiyoushi 1.6 được biên dịch dựa
+    // trên phiên bản mới hơn (okhttp 5.x, serialization 1.11, jsoup 1.22…). Ta
+    // biên dịch với bản cũ nhưng đóng gói bản mới để mã của extension chạy được.
+    runtimeOnly(libs.okhttp.runtime)
+    runtimeOnly(libs.okhttp.brotli)
+    runtimeOnly(libs.okhttp.zstd)
+    runtimeOnly(libs.okio.runtime)
+    runtimeOnly(libs.jsoup.runtime)
+    runtimeOnly(libs.jspecify)
+    runtimeOnly(libs.kotlinx.serialization.json.runtime)
+    runtimeOnly(libs.kotlinx.serialization.protobuf.runtime)
+    runtimeOnly(libs.kotlinx.serialization.json.okio)
+    runtimeOnly(libs.zstd.kmp.okio)
+
+    // --- Dịch trên máy (ML Kit, không cần mạng sau khi tải gói ngôn ngữ) ---
+    implementation(libs.mlkit.translate)
+    implementation(libs.mlkit.language.id)
 
     // --- Persistence (settings + reading history) ---
     implementation(libs.datastore.preferences)

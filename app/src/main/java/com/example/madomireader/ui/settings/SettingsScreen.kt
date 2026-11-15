@@ -55,6 +55,7 @@ import com.example.madomireader.domain.model.GeminiModel
 import com.example.madomireader.domain.model.OverlayStyle
 import com.example.madomireader.domain.model.ReaderMode
 import com.example.madomireader.domain.model.SourceLanguage
+import com.example.madomireader.domain.model.TranslationEngine
 import kotlin.math.roundToInt
 
 /**
@@ -102,8 +103,32 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
+            // -------------------------------------------------------- công cụ dịch
+            SectionTitle(text = "Công cụ dịch")
+
+            SettingLabel(
+                title = "Bản dịch được tạo bằng",
+                subtitle = state.settings.translationEngine.description,
+            )
+            ChipSelector(
+                options = TranslationEngine.entries.toList(),
+                selected = state.settings.translationEngine,
+                label = { it.label },
+                onSelect = viewModel::setTranslationEngine,
+            )
+
             // ------------------------------------------------------------ Gemini
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
             SectionTitle(text = "Gemini AI")
+
+            if (state.settings.translationEngine != TranslationEngine.GEMINI) {
+                Text(
+                    text = "Chỉ cần API key khi chọn công cụ dịch Gemini ở trên.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             OutlinedTextField(
                 value = state.apiKeyInput,
@@ -278,35 +303,38 @@ fun SettingsScreen(
             // ------------------------------------------------------------ nguồn
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
             SectionTitle(text = "Nguồn truyện")
-            container.sourceRegistry.all.forEach { source ->
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(
-                            text = source.name,
-                            style = MaterialTheme.typography.titleSmall,
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = source.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+
+            if (state.sources.isEmpty()) {
+                Text(
+                    text = "Chưa có nguồn truyện nào. Ứng dụng nhận diện extension APK " +
+                        "(Keiyoushi/Tachiyomi) đã tải vào bộ nhớ riêng của nó.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                state.sources.forEach { source ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = source.name,
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = source.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Muốn thêm nguồn mới: viết một class MangaSource rồi đăng ký trong " +
-                    "SourceRegistry — không cần sửa giao diện.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
 
             // ------------------------------------------------------------ dữ liệu
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))

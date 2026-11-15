@@ -16,6 +16,7 @@ import com.example.madomireader.domain.model.GeminiModel
 import com.example.madomireader.domain.model.OverlayStyle
 import com.example.madomireader.domain.model.ReaderMode
 import com.example.madomireader.domain.model.SourceLanguage
+import com.example.madomireader.domain.model.TranslationEngine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -42,6 +43,12 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setModel(model: GeminiModel) = edit { it[Keys.MODEL] = model.id }
 
+    suspend fun setTranslationEngine(engine: TranslationEngine) =
+        edit { it[Keys.TRANSLATION_ENGINE] = engine.id }
+
+    suspend fun setExtensionRepoUrl(url: String) =
+        edit { it[Keys.EXTENSION_REPO_URL] = url.trim().ifBlank { AppSettings.DEFAULT_EXTENSION_REPO_URL } }
+
     suspend fun setSourceLanguage(language: SourceLanguage) = edit { it[Keys.SOURCE_LANGUAGE] = language.id }
 
     suspend fun setDefaultReaderMode(mode: ReaderMode) = edit { it[Keys.READER_MODE] = mode.id }
@@ -65,17 +72,22 @@ class SettingsRepository(private val context: Context) {
     private fun Preferences.toAppSettings(): AppSettings = AppSettings(
         apiKey = this[Keys.API_KEY].orEmpty(),
         model = GeminiModel.fromId(this[Keys.MODEL]),
+        translationEngine = TranslationEngine.fromId(this[Keys.TRANSLATION_ENGINE]),
         sourceLanguage = SourceLanguage.fromId(this[Keys.SOURCE_LANGUAGE]),
         defaultReaderMode = ReaderMode.fromId(this[Keys.READER_MODE]),
         overlayStyle = OverlayStyle.fromId(this[Keys.OVERLAY_STYLE]),
         autoTranslate = this[Keys.AUTO_TRANSLATE] ?: false,
         gridColumns = this[Keys.GRID_COLUMNS] ?: 2,
         fontSizeScale = this[Keys.FONT_SCALE] ?: 1.0f,
+        extensionRepoUrl = this[Keys.EXTENSION_REPO_URL]?.takeIf { it.isNotBlank() }
+            ?: AppSettings.DEFAULT_EXTENSION_REPO_URL,
     )
 
     private object Keys {
         val API_KEY = stringPreferencesKey("gemini_api_key")
         val MODEL = stringPreferencesKey("gemini_model")
+        val TRANSLATION_ENGINE = stringPreferencesKey("translation_engine")
+        val EXTENSION_REPO_URL = stringPreferencesKey("extension_repo_url")
         val SOURCE_LANGUAGE = stringPreferencesKey("source_language")
         val READER_MODE = stringPreferencesKey("reader_mode")
         val OVERLAY_STYLE = stringPreferencesKey("overlay_style")

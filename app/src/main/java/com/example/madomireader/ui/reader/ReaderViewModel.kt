@@ -230,7 +230,7 @@ class ReaderViewModel(
 
     private suspend fun translatePageInternal(page: Page): PageTranslation {
         val current = container.settingsRepository.snapshot()
-        if (!current.hasApiKey) throw MissingApiKeyException()
+        if (current.requiresApiKey && !current.hasApiKey) throw MissingApiKeyException()
 
         val bitmap = container.pageBitmapLoader.load(page)
         val blocks = container.ocrEngine.recognizeBlocks(bitmap, current.sourceLanguage)

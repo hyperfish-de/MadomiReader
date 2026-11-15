@@ -62,8 +62,7 @@ data class Chapter(
 /**
  * Một trang truyện.
  *
- * Nếu [placeholderLines] không rỗng thì trang này được vẽ cục bộ (nguồn demo offline)
- * thay vì tải từ [imageUrl] — rất tiện để thử luồng OCR + dịch mà không cần mạng.
+ * [headers] là các header cần gửi kèm khi tải ảnh (một số nguồn yêu cầu Referer/Cookie).
  */
 data class Page(
     val index: Int,
@@ -71,10 +70,7 @@ data class Page(
     val width: Int = 0,
     val height: Int = 0,
     val headers: Map<String, String> = emptyMap(),
-    val placeholderLines: List<String> = emptyList(),
-) {
-    val isLocal: Boolean get() = placeholderLines.isNotEmpty()
-}
+)
 
 /**
  * Chi tiết truyện kèm danh sách chương.
