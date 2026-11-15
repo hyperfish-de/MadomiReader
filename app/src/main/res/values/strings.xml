@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Madomi Reader</string>
+    <string name="nav_home">Khám phá</string>
+    <string name="nav_history">Lịch sử</string>
+    <string name="nav_saved">Đã lưu</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="search_hint">Tìm truyện theo tên, tác giả…</string>
+    <string name="action_back">Quay lại</string>
+    <string name="action_retry">Thử lại</string>
+    <string name="action_settings">Cài đặt</string>
+    <string name="action_translate_page">Dịch trang này</string>
+    <string name="action_translate_all">Dịch tất cả trang</string>
+    <string name="label_translating">Đang dịch…</string>
+    <string name="label_translated">Đã dịch</string>
+    <string name="label_empty">Không có dữ liệu</string>
+    <string name="label_loading">Đang tải…</string>
+    <string name="label_error">Đã xảy ra lỗi</string>
+    <string name="label_chapters">Danh sách chương</string>
+    <string name="label_read">Đã đọc</string>
+    <string name="label_continue">Đọc tiếp</string>
+    <string name="label_prev_chapter">Chương trước</string>
+    <string name="label_next_chapter">Chương sau</string>
+</resources>
