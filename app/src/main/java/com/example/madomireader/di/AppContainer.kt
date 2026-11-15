@@ -10,6 +10,7 @@ import com.example.madomireader.data.remote.google.GoogleTranslator
 import com.example.madomireader.data.remote.mlkit.MlKitTranslator
 import com.example.madomireader.data.repository.MangaRepository
 import com.example.madomireader.data.source.SourceRegistry
+import com.example.madomireader.data.source.extension.InstalledExtensionScanner
 import com.example.madomireader.data.source.extension.ExtensionManager
 import com.example.madomireader.data.source.extension.InjektHost
 import com.example.madomireader.domain.ocr.OcrEngine
